@@ -31,7 +31,7 @@ def create_calendar_entry(session_detail):
 
 def get_calendar_download_link(session_details):
     calendar = Calendar(events=[create_calendar_entry(session_detail) for session_detail in session_details])
-    b64 = base64.b64encode(str(calendar).encode())
+    b64 = base64.b64encode(calendar.serialize().encode())  # Use serialize() instead of str()
     return f'<a href="data:text/calendar;base64,{b64.decode()}" download="calendar.ics">Download Calendar file</a>'
 
 def fetch_data(url):
@@ -56,7 +56,7 @@ def fetch_data(url):
                 if isinstance(location, dict):
                     location = location.get('title', 'Unknown')  # Extract the 'title' from the location dictionary
                 available_slots = max_headcount - current_headcount
-                available_slots = 'NO AVAILABLE SLOTS' if available_slots == 0 else available_slots
+                available_slots = 'NO AVAILABLE SLOTS' if available_slots == 0 else str(available_slots)  # Convert to string
                 start_time = datetime.fromisoformat(session.get('start'))
                 end_time = datetime.fromisoformat(session.get('end'))
                 length_of_class = f"{int((end_time - start_time).total_seconds() / 60)} mins"
@@ -78,6 +78,7 @@ def fetch_data(url):
                 session_details.append(session_detail)
 
             df = pd.DataFrame(session_details)
+            df.columns = df.columns.astype(str)  # Ensure all column headers are strings
 
             return df
         else:
